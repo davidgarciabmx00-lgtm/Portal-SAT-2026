@@ -124,8 +124,14 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push('/');
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      // Esperar a que el token esté disponible y la cookie se setee
+      const token = await userCredential.user.getIdToken();
+      document.cookie = `__session=${token}; path=/; max-age=3600; samesite=strict${process.env.NODE_ENV === 'production' ? '; secure' : ''}`;
+      // Pequeño delay para asegurar que el estado se actualice
+      setTimeout(() => {
+        router.push('/');
+      }, 500);
     } catch (error) {
       console.error('Error logging in:', error);
       alert('Error en login');
