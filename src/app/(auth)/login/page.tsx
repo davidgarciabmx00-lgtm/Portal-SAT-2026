@@ -168,7 +168,7 @@ const LoginPage: React.FC = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-24 h-24 bg-white rounded-full shadow-lg mb-4">
             <img
-              src="/images/logos/cropped-favicon.png"
+              src="https://alfredsmart.com/wp-content/uploads/2022/09/cropped-favicon.png"
               alt="AlfredSmart Logo"
               className="w-16 h-16"
             />
