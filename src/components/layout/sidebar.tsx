@@ -215,11 +215,11 @@ const Sidebar = () => {
           <div className="p-5 border-b border-gray-800/40 flex-shrink-0 min-h-[80px] flex items-center bg-gradient-to-r from-gray-950/80 to-gray-900/60">
             <div className="flex items-center flex-1">
               {/* Logo */}
-              <div className="bg-white size-12 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-200 flex-shrink-0 overflow-hidden">
+              <div className="bg-gray-100 size-12 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-200 flex-shrink-0 overflow-hidden border border-gray-300">
                 <img
-                  src="/images/logos/cropped-favicon.png"
-                  alt="AlfredSmart Logo"
-                  className="w-8 h-8 object-contain"
+                  src="/images/logos/logo.png"
+                  alt="SAT Logo"
+                  className="w-10 h-10 object-contain"
                 />
               </div>
 
@@ -301,11 +301,11 @@ const Sidebar = () => {
       <div className="p-5 border-b border-gray-800/40 flex-shrink-0 min-h-[80px] flex items-center bg-gradient-to-r from-gray-950/80 to-gray-900/60">
         <div className="flex items-center flex-1">
           {/* Logo */}
-          <div className="bg-white size-12 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-200 flex-shrink-0 overflow-hidden">
+          <div className="bg-gray-100 size-12 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-200 flex-shrink-0 overflow-hidden border border-gray-300">
             <img
-              src="/images/logos/cropped-favicon.png"
-              alt="AlfredSmart Logo"
-              className="w-8 h-8 object-contain"
+              src="/images/logos/logo.png"
+              alt="SAT Logo"
+              className="w-10 h-10 object-contain"
             />
           </div>
 
