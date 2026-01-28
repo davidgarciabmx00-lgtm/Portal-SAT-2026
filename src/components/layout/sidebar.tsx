@@ -217,7 +217,7 @@ const Sidebar = () => {
               {/* Logo */}
               <div className="bg-gray-100 size-12 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-200 flex-shrink-0 overflow-hidden border border-gray-300">
                 <img
-                  src="/images/logos/logo.png"
+                  src="https://alfredsmart.com/wp-content/uploads/2022/09/cropped-favicon.png"
                   alt="SAT Logo"
                   className="w-10 h-10 object-contain"
                 />
@@ -303,7 +303,7 @@ const Sidebar = () => {
           {/* Logo */}
           <div className="bg-gray-100 size-12 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-200 flex-shrink-0 overflow-hidden border border-gray-300">
             <img
-              src="/images/logos/logo.png"
+              src="https://alfredsmart.com/wp-content/uploads/2022/09/cropped-favicon.png"
               alt="SAT Logo"
               className="w-10 h-10 object-contain"
             />
