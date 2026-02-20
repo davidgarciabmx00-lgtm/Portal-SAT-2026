@@ -1,0 +1,477 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+
+interface AppointmentForm {
+  name: string;
+  email: string;
+  phone: string;
+  description: string;
+  dateTime: string;
+}
+
+interface QuestionnaireData {
+  serviceType: string;
+  urgency: string;
+  deviceType: string;
+  hasWarranty: string;
+  previousIssues: string;
+  preferredTime: string;
+}
+
+export default function AppointmentPage() {
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [showQuestionnaire, setShowQuestionnaire] = useState(false);
+  const [questionnaireData, setQuestionnaireData] = useState<QuestionnaireData>({
+    serviceType: '',
+    urgency: '',
+    deviceType: '',
+    hasWarranty: '',
+    previousIssues: '',
+    preferredTime: '',
+  });
+  const [form, setForm] = useState<AppointmentForm>({
+    name: '',
+    email: '',
+    phone: '',
+    description: '',
+    dateTime: '',
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetchAvailability();
+  }, []);
+
+  const fetchAvailability = async () => {
+    const start = new Date();
+    const end = new Date();
+    end.setDate(end.getDate() + 30); // Next 30 days
+
+    const response = await fetch(`/api/appointments/availability?start=${start.toISOString()}&end=${end.toISOString()}`);
+    const data = await response.json();
+    setAvailableSlots(data.availableSlots || []);
+  };
+
+  const handleQuestionnaireSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setShowQuestionnaire(false);
+    setForm({ ...form, dateTime: selectedSlot! });
+  };
+
+  const handleQuestionnaireCancel = () => {
+    setShowQuestionnaire(false);
+    setSelectedSlot(null);
+    setQuestionnaireData({
+      serviceType: '',
+      urgency: '',
+      deviceType: '',
+      hasWarranty: '',
+      previousIssues: '',
+      preferredTime: '',
+    });
+  };
+
+  const handleSelect = (arg: any) => {
+    const start = arg.start;
+    
+    // Check if the selected time slot is available
+    const slot = availableSlots.find(slot => {
+      const slotDate = new Date(slot);
+      return slotDate.getTime() === start.getTime();
+    });
+    
+    if (slot) {
+      setSelectedSlot(slot);
+      setShowQuestionnaire(true);
+    } else {
+      alert('Esta franja horaria no está disponible. Por favor selecciona una franja verde.');
+    }
+  };
+
+  const events = availableSlots.map(slot => ({
+    title: 'Disponible',
+    start: slot,
+    end: new Date(new Date(slot).getTime() + 60 * 60 * 1000).toISOString(),
+    backgroundColor: 'green',
+    display: 'background', // Make it a background event
+  }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    // Incluir información del cuestionario en la descripción
+    const enhancedDescription = `
+${form.description}
+
+--- Información del Cuestionario ---
+Tipo de servicio: ${questionnaireData.serviceType}
+Urgencia: ${questionnaireData.urgency}
+Tipo de dispositivo: ${questionnaireData.deviceType}
+Tiene garantía: ${questionnaireData.hasWarranty}
+Problemas anteriores: ${questionnaireData.previousIssues || 'No especificado'}
+Horario preferido: ${questionnaireData.preferredTime || 'Sin preferencia'}
+    `.trim();
+
+    const response = await fetch('/api/appointments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...form,
+        description: enhancedDescription,
+        questionnaireData
+      }),
+    });
+
+    if (response.ok) {
+      alert('Cita agendada exitosamente. Revisa tu correo para confirmación.');
+      setForm({ name: '', email: '', phone: '', description: '', dateTime: '' });
+      setSelectedSlot(null);
+      setQuestionnaireData({
+        serviceType: '',
+        urgency: '',
+        deviceType: '',
+        hasWarranty: '',
+        previousIssues: '',
+        preferredTime: '',
+      });
+      fetchAvailability(); // Refresh
+    } else {
+      alert('Error al agendar cita.');
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-4 px-2 sm:px-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Agendar Cita Técnica</h1>
+          <p className="text-gray-600 text-sm sm:text-base">Selecciona una fecha y hora disponible para tu servicio</p>
+        </div>
+
+        {!selectedSlot && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 max-w-2xl mx-auto">
+            <p className="text-blue-800 text-center text-sm sm:text-base">
+              📅 Selecciona una fecha y hora disponible en el calendario para continuar
+            </p>
+          </div>
+        )}
+
+        {/* Layout principal centrado */}
+        <div className="flex flex-col lg:flex-row gap-6 items-start justify-center">
+          {/* Calendario - Centrado y responsivo */}
+          <div className="w-full lg:w-auto lg:flex-shrink-0">
+            <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4 max-w-full overflow-x-auto">
+              <FullCalendar
+                plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                initialView="timeGridWeek"
+                headerToolbar={{
+                  left: 'prev,next today',
+                  center: 'title',
+                  right: 'dayGridMonth,timeGridWeek,timeGridDay',
+                }}
+                events={events}
+                selectable={true}
+                select={handleSelect}
+                height="auto"
+                aspectRatio={1.2}
+                contentHeight={600}
+                dayMaxEvents={4}
+                moreLinkClick="popover"
+                eventDisplay="block"
+                displayEventTime={true}
+                slotMinTime="08:00:00"
+                slotMaxTime="18:00:00"
+                businessHours={{
+                  daysOfWeek: [1, 2, 3, 4, 5], // Lunes a Viernes
+                  startTime: '08:00',
+                  endTime: '18:00',
+                }}
+                locale="es"
+                buttonText={{
+                  today: 'Hoy',
+                  month: 'Mes',
+                  week: 'Semana',
+                  day: 'Día',
+                  list: 'Lista'
+                }}
+                dayHeaderFormat={{ weekday: 'short', day: 'numeric' }}
+                slotLabelFormat={{
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: false
+                }}
+                eventTimeFormat={{
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: false
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Formulario - Aparece después del cuestionario */}
+          <div className="w-full lg:w-96 lg:flex-shrink-0">
+          {selectedSlot ? (
+            <div className="space-y-4">
+              {/* Resumen del Cuestionario */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center text-green-800 mb-2">
+                  <span className="material-symbols-outlined mr-2">check_circle</span>
+                  <span className="font-medium">Cuestionario Completado</span>
+                </div>
+                <div className="text-sm text-green-700 space-y-1">
+                  <p><strong>Servicio:</strong> {questionnaireData.serviceType}</p>
+                  <p><strong>Urgencia:</strong> {questionnaireData.urgency}</p>
+                  <p><strong>Dispositivo:</strong> {questionnaireData.deviceType}</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium">Nombre</label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Correo</label>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Teléfono</label>
+                <input
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Descripción del Problema</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                  rows={4}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Fecha y Hora Seleccionada</label>
+                <p className="mt-1 text-sm text-gray-600">
+                  {new Date(selectedSlot).toLocaleString('es-MX')}
+                </p>
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:opacity-50"
+              >
+                {loading ? 'Agendando...' : 'Agendar Cita'}
+              </button>
+            </form>
+            </div>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 sm:p-8 text-center">
+              <div className="text-gray-400 mb-4">
+                <span className="material-symbols-outlined text-4xl">calendar_today</span>
+              </div>
+              <p className="text-gray-500 text-sm sm:text-base">
+                El formulario aparecerá aquí una vez que selecciones una fecha y hora disponible.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal del Cuestionario Flotante */}
+      {showQuestionnaire && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto animate-fade-in-up">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-t-lg">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-bold">Cuestionario de Servicio</h3>
+                <button
+                  onClick={handleQuestionnaireCancel}
+                  className="text-white hover:text-gray-200 transition-colors"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              <p className="text-blue-100 text-sm mt-1">
+                Ayúdanos a prepararnos mejor para tu visita
+              </p>
+            </div>
+
+            <form onSubmit={handleQuestionnaireSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ¿Qué tipo de servicio necesitas?
+                </label>
+                <select
+                  value={questionnaireData.serviceType}
+                  onChange={(e) => setQuestionnaireData({ ...questionnaireData, serviceType: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Selecciona una opción</option>
+                  <option value="instalacion">Instalación de equipo</option>
+                  <option value="reparacion">Reparación de equipo</option>
+                  <option value="mantenimiento">Mantenimiento preventivo</option>
+                  <option value="configuracion">Configuración de red/WiFi</option>
+                  <option value="actualizacion">Actualización de software</option>
+                  <option value="diagnostico">Diagnóstico de problemas</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ¿Cuál es el nivel de urgencia?
+                </label>
+                <select
+                  value={questionnaireData.urgency}
+                  onChange={(e) => setQuestionnaireData({ ...questionnaireData, urgency: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Selecciona una opción</option>
+                  <option value="baja">Baja - Puedo esperar</option>
+                  <option value="media">Media - Esta semana</option>
+                  <option value="alta">Alta - Lo antes posible</option>
+                  <option value="critica">Crítica - Servicio inmediato</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ¿Qué tipo de dispositivo necesitas servicio?
+                </label>
+                <select
+                  value={questionnaireData.deviceType}
+                  onChange={(e) => setQuestionnaireData({ ...questionnaireData, deviceType: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Selecciona una opción</option>
+                  <option value="computadora">Computadora de escritorio</option>
+                  <option value="laptop">Laptop/Notebook</option>
+                  <option value="impresora">Impresora</option>
+                  <option value="red">Equipos de red (routers, switches)</option>
+                  <option value="servidor">Servidor</option>
+                  <option value="telefono">Teléfono IP/VoIP</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ¿El equipo tiene garantía activa?
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="warranty"
+                      value="si"
+                      checked={questionnaireData.hasWarranty === 'si'}
+                      onChange={(e) => setQuestionnaireData({ ...questionnaireData, hasWarranty: e.target.value })}
+                      className="mr-2"
+                    />
+                    Sí
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="warranty"
+                      value="no"
+                      checked={questionnaireData.hasWarranty === 'no'}
+                      onChange={(e) => setQuestionnaireData({ ...questionnaireData, hasWarranty: e.target.value })}
+                      className="mr-2"
+                    />
+                    No
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ¿Has tenido problemas similares anteriormente?
+                </label>
+                <textarea
+                  value={questionnaireData.previousIssues}
+                  onChange={(e) => setQuestionnaireData({ ...questionnaireData, previousIssues: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={2}
+                  placeholder="Describe si has tenido problemas similares antes..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ¿Tienes preferencia de horario para la visita?
+                </label>
+                <select
+                  value={questionnaireData.preferredTime}
+                  onChange={(e) => setQuestionnaireData({ ...questionnaireData, preferredTime: e.target.value })}
+                  className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Sin preferencia</option>
+                  <option value="manana">Mañana (9:00 - 12:00)</option>
+                  <option value="tarde">Tarde (13:00 - 17:00)</option>
+                  <option value="flexible">Soy flexible</option>
+                </select>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+                <div className="flex items-center text-blue-800 text-sm">
+                  <span className="material-symbols-outlined mr-2">info</span>
+                  <span>
+                    <strong>Fecha y hora seleccionada:</strong> {selectedSlot ? new Date(selectedSlot).toLocaleString('es-MX') : ''}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={handleQuestionnaireCancel}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors font-medium"
+                >
+                  Continuar con el Agendamiento
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}

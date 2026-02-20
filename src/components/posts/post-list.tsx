@@ -3,25 +3,10 @@
 
 import { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy, where, Timestamp } from 'firebase/firestore';
-import { getFirestore } from 'firebase/firestore';
-import { initializeApp } from 'firebase/app';
 import { Post, PostCategory } from '@/types/post';
 import { formatDate } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDLK0kYtulUzvkPsV1rAmEWtOI1_rQxDbE",
-  authDomain: "soporte-sat.firebaseapp.com",
-  projectId: "soporte-sat",
-  storageBucket: "soporte-sat.firebasestorage.app",
-  messagingSenderId: "1058754500488",
-  appId: "1:1058754500488:web:a8040573120a5466620c3d",
-  measurementId: "G-LYK134PVPJ",
-  databaseURL: "https://soporte-sat-default-rtdb.europe-west1.firebasedatabase.app/"
-};
-
-const app = initializeApp(firebaseConfig);
-const firestore = getFirestore(app);
+import { firestore } from '@/lib/firebase';
 
 const CATEGORY_STYLES: Record<PostCategory, { label: string; color: string }> = {
   urgente: { label: '🔴 Urgente', color: 'bg-red-100 text-red-800' },

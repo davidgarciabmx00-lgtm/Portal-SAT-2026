@@ -11,8 +11,11 @@ interface ConditionalLayoutProps {
 const ConditionalLayout: React.FC<ConditionalLayoutProps> = ({ children }) => {
   const pathname = usePathname();
 
-  // Si la ruta comienza con /login, no aplicar LayoutWrapper
-  if (pathname.startsWith('/login')) {
+  // Rutas públicas que no requieren layout con sidebar/topbar
+  const publicPaths = ['/login', '/appointment'];
+
+  // Si la ruta es pública, no aplicar LayoutWrapper
+  if (publicPaths.some(path => pathname.startsWith(path))) {
     return <>{children}</>;
   }
 

@@ -71,6 +71,10 @@ export default function AdminPage() {
     }
   };
 
+  const authorizeGoogleCalendar = () => {
+    window.location.href = '/api/auth/google-calendar';
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -85,11 +89,19 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-3xl font-bold text-black">Panel de Administración</h1>
-        <Button onClick={() => router.push('/')} variant="secondary">
-          ← Volver al Dashboard
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={authorizeGoogleCalendar}>
+            Autorizar Google Calendar
+          </Button>
+          <Button onClick={() => router.push('/admin/calendario')}>
+            Gestionar Calendario
+          </Button>
+          <Button onClick={() => router.push('/')} variant="secondary">
+            ← Volver al Dashboard
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">

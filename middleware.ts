@@ -7,8 +7,11 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('__session')?.value ||
                 request.headers.get('authorization')?.replace('Bearer ', '');
 
-  // Si no hay token y no estamos en login, redirigir a login
-  if (!token && !request.nextUrl.pathname.startsWith('/login')) {
+  // Rutas públicas que no requieren autenticación
+  const publicPaths = ['/login', '/appointment'];
+
+  // Si no hay token y no estamos en rutas públicas, redirigir a login
+  if (!token && !publicPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
     const loginUrl = new URL('/login', request.url);
     return NextResponse.redirect(loginUrl);
   }

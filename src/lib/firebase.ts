@@ -1,19 +1,24 @@
 // src/lib/firebase.ts
-import { initializeApp } from "firebase/app";
+import { getApps, initializeApp, deleteApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getDatabase } from "firebase/database";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDLK0kYtulUzvkPsV1rAmEWtOI1_rQxDbE",
-  authDomain: "soporte-sat.firebaseapp.com",
-  projectId: "soporte-sat",
-  storageBucket: "soporte-sat.firebasestorage.app",
-  messagingSenderId: "1058754500488",
-  appId: "1:1058754500488:web:a8040573120a5466620c3d",
-  measurementId: "G-LYK134PVPJ",
-  databaseURL: "https://soporte-sat-default-rtdb.europe-west1.firebasedatabase.app/"
+  apiKey: "AIzaSyBktykEWCAKYL6Y77dWYZvDPD7bKmuTl58",
+  authDomain: "portal-sat.firebaseapp.com",
+  projectId: "portal-sat",
+  storageBucket: "portal-sat.firebasestorage.app",
+  messagingSenderId: "570783950947",
+  appId: "1:570783950947:web:01bf00cb80ed5f52ed7056",
+  measurementId: "G-PKP8ZLC0C1"
 };
+
+if (getApps().length > 0) {
+  deleteApp(getApps()[0]);
+}
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getDatabase(app);
+export const firestore = getFirestore(app);
