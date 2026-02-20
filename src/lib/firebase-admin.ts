@@ -26,7 +26,7 @@ if (!admin.apps.length) {
         const key = JSON.parse(readFileSync(keyPath, 'utf8'));
         admin.initializeApp({
           credential: admin.credential.cert(key),
-          databaseURL: 'https://portal-soporte-sat-default-rtdb.firebaseio.com/',
+          databaseURL: 'https://tickets-alfred-smart-default-rtdb.firebaseio.com/',
         });
         console.log('✅ Firebase Admin inicializado con archivo de clave de servicio');
       } catch (fileError) {
